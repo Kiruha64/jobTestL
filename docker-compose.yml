@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # MySQL Service
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: my_database
+      MYSQL_USER: my_user
+      MYSQL_PASSWORD: my_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # PHP Service
+  php:
+    build:
+      context: .  # Use the current directory for the Dockerfile
+      dockerfile: Dockerfile
+    container_name: php_container
+    volumes:
+      - ./src:/var/www/html/src      # Ensure src directory is mounted
+      - ./public:/var/www/html/public  # Ensure public directory is mounted
+      - ./config:/var/www/html/config   # Mount config directory
+    ports:
+      - "8080:8080"  # Change the port to 8080
+    command: php -S 0.0.0.0:8080 -t /var/www/html/public  # Start PHP built-in server
+    depends_on:
+      - mysql  # Ensure this service is running
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
